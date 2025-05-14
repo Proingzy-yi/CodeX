@@ -1,0 +1,66 @@
+<template>
+  <div
+    id="code_editor"
+    ref="codeEditorRef"
+    style="min-height: 400px; height: 70vh"
+  />
+</template>
+
+<script lang="ts" setup>
+import * as monaco from "monaco-editor";
+
+import { defineProps, onMounted, ref, toRaw, watch, withDefaults } from "vue";
+
+interface Props {
+  value: string;
+  language?: string;
+  handleChange: (value: string) => void;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  value: () => "",
+  language: "java",
+  handleChange: (v: string) => {
+    console.log(v);
+  },
+});
+
+const codeEditorRef = ref();
+const codeEditor = ref();
+
+watch(
+  () => props.language,
+  () => {
+    if (codeEditor.value) {
+      monaco.editor.setModelLanguage(
+        toRaw(codeEditor.value).getModel(),
+        props.language
+      );
+    }
+  }
+);
+onMounted(() => {
+  if (!codeEditorRef.value) {
+    return;
+  }
+  codeEditor.value = monaco.editor.create(codeEditorRef.value, {
+    value: props.value,
+    language: props.language,
+    automaticLayout: true,
+    colorDecorators: true,
+    minimap: {
+      enabled: true,
+    },
+    //lineNumbers: "off",
+    // roundedSelection: false,
+    // scrollBeyondLastColumn: false,
+    readOnly: false,
+    theme: "vs-dark",
+  });
+  codeEditor.value.onDidChangeModelContent(() => {
+    props.handleChange(toRaw(codeEditor.value).getValue());
+  });
+});
+</script>
+
+<style scoped></style>
